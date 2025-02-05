@@ -5,10 +5,9 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\EventListener;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\EventListener\RouterListener as SymfonyRouterListener;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\HttpKernel;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel\LegacyKernelInterface;
 
@@ -22,7 +21,7 @@ use Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel\LegacyKernelInterface;
 class RouterListener implements EventSubscriberInterface
 {
     /**
-     * @var \Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel\LegacyKernelInterface
+     * @var LegacyKernelInterface
      */
     protected $legacyKernel;
 
@@ -32,15 +31,10 @@ class RouterListener implements EventSubscriberInterface
     protected $routerListener;
 
     /**
-     * @var \Symfony\Component\HttpKernel\Log\LoggerInterface
+     * @var LoggerInterface
      */
     protected $logger;
 
-    /**
-     * @param LegacyKernelInterface $legacyKernel
-     * @param SymfonyRouterListener $routerListener
-     * @param LoggerInterface       $logger
-     */
     public function __construct(LegacyKernelInterface $legacyKernel, SymfonyRouterListener $routerListener, LoggerInterface $logger = null)
     {
         $this->legacyKernel = $legacyKernel;
@@ -48,12 +42,7 @@ class RouterListener implements EventSubscriberInterface
         $this->logger = $logger;
     }
 
-    /**
-     * @param GetResponseEvent $event
-     *
-     * @return GetResponseEvent
-     */
-    public function onKernelRequest(GetResponseEvent $event)
+    public function onKernelRequest(RequestEvent $event)
     {
         try {
             $this->routerListener->onKernelRequest($event);
@@ -65,15 +54,10 @@ class RouterListener implements EventSubscriberInterface
             $response = $this->legacyKernel->handle($event->getRequest(), $event->getRequestType(), true);
             if ($response->getStatusCode() !== 404) {
                 $event->setResponse($response);
-
-                return $event;
             }
         }
     }
 
-    /**
-     * @param FinishRequestEvent $event
-     */
     public function onKernelFinishRequest(FinishRequestEvent $event)
     {
         $this->routerListener->onKernelFinishRequest($event);
@@ -82,16 +66,11 @@ class RouterListener implements EventSubscriberInterface
     /**
      * @{inheritdoc}
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
-        $listeners = array(
-            KernelEvents::REQUEST => array(array('onKernelRequest', 31)),
-        );
-
-        if (defined('\Symfony\Component\HttpKernel\KernelEvents::FINISH_REQUEST')) {
-            $listeners[KernelEvents::FINISH_REQUEST] = array(array('onKernelFinishRequest', 0));
-        }
-
-        return $listeners;
+        return [
+            KernelEvents::REQUEST => [['onKernelRequest', 31]],
+            KernelEvents::FINISH_REQUEST => [['onKernelFinishRequest', 0]],
+        ];
     }
 }

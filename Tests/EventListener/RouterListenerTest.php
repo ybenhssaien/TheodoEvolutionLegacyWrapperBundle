@@ -5,7 +5,7 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\Tests\EventListener;
 use Prophecy\PhpUnit\ProphecyTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernel;
 use Theodo\Evolution\Bundle\LegacyWrapperBundle\EventListener\RouterListener;
 
@@ -22,13 +22,13 @@ class RouterListenerTest extends ProphecyTestCase
         $response = new Response();
 
         $httpKernel = $this->prophesize('Symfony\Component\HttpKernel\HttpKernelInterface');
-        $event = new GetResponseEvent($httpKernel->reveal(), $request, HttpKernel::MASTER_REQUEST);
+        $event = new RequestEvent($httpKernel->reveal(), $request, HttpKernel::MAIN_REQUEST);
 
         $baseRouterListener = $this->prophesize('Symfony\Component\HttpKernel\EventListener\RouterListener');
         $baseRouterListener->onKernelRequest($event)->willThrow('Symfony\Component\HttpKernel\Exception\NotFoundHttpException');
 
         $kernel = $this->prophesize('Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel\LegacyKernelInterface');
-        $kernel->handle($request, HttpKernel::MASTER_REQUEST, true)->willReturn($response);
+        $kernel->handle($request, HttpKernel::MAIN_REQUEST, true)->willReturn($response);
 
         $routerListener = new \Theodo\Evolution\Bundle\LegacyWrapperBundle\EventListener\RouterListener($kernel->reveal(), $baseRouterListener->reveal());
         $routerListener->onKernelRequest($event);
@@ -41,7 +41,7 @@ class RouterListenerTest extends ProphecyTestCase
         $request = new Request();
 
         $httpKernel = $this->prophesize('Symfony\Component\HttpKernel\HttpKernelInterface');
-        $event = new GetResponseEvent($httpKernel->reveal(), $request, HttpKernel::MASTER_REQUEST);
+        $event = new RequestEvent($httpKernel->reveal(), $request, HttpKernel::MAIN_REQUEST);
 
         $baseRouterListener = $this->prophesize('Symfony\Component\HttpKernel\EventListener\RouterListener');
         $baseRouterListener->onKernelRequest($event);
@@ -60,13 +60,13 @@ class RouterListenerTest extends ProphecyTestCase
         $response->setStatusCode(404);
 
         $httpKernel = $this->prophesize('Symfony\Component\HttpKernel\HttpKernelInterface');
-        $event = new GetResponseEvent($httpKernel->reveal(), $request, HttpKernel::MASTER_REQUEST);
+        $event = new RequestEvent($httpKernel->reveal(), $request, HttpKernel::MAIN_REQUEST);
 
         $baseRouterListener = $this->prophesize('Symfony\Component\HttpKernel\EventListener\RouterListener');
         $baseRouterListener->onKernelRequest($event)->willThrow('Symfony\Component\HttpKernel\Exception\NotFoundHttpException');
 
         $kernel = $this->prophesize('Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel\LegacyKernelInterface');
-        $kernel->handle($request, HttpKernel::MASTER_REQUEST, true)->willReturn($response);
+        $kernel->handle($request, HttpKernel::MAIN_REQUEST, true)->willReturn($response);
 
         $routerListener = new RouterListener($kernel->reveal(), $baseRouterListener->reveal());
         $routerListener->onKernelRequest($event);
